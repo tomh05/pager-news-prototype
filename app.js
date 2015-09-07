@@ -1,26 +1,92 @@
-// Welcome to Framer
-
-var SpineElement = function(mainImgSrc) {
+var SpineElement = function(spineElementNo,mainImgSrc) {
     //this.name = name;
     this.layer = new Layer({x:0, y:0, width:1440, height:2392, image:mainImgSrc});
     this.moreItems = new Array();
     this.popups = new Array();
+    this.spineElementNo = spineElementNo;
+
+    this.moreButtons = new Array();
+    this.moreBoxes = new Array();
+
+    // create drawer
+    this.drawer = new Framer.PageComponent({
+        width: 1440,
+        height: 600,
+        scrollVertical: false,
+        scrollHorizontal: true,
+        y: 1720,
+        propagateEvents: false,
+        directionLock: true,
+        backgroundColor: "transparent",
+        directionLockThreshold: {x:10,y:10},
+        superLayer: this.layer
+    }); 
+    this.drawer.on(Events.DirectionLockDidStart, function(event, layer) {  scrolling = true; });
+    this.drawer.on(Events.ScrollEnd, function(event, layer) {  scrolling = false; });
+
+    // create page controller
+    this.moreBoxesPager = new Framer.PageComponent({
+        width: 1240,
+        height: 2000,
+        scrollVertical: false,
+        scrollHorizontal: true,
+        y: 100,
+        propagateEvents: false,
+        directionLock: true,
+        backgroundColor: "transparent",
+        directionLockThreshold: {x:10,y:10},
+        contentInset: {top:100,right:100,bottom:100,left:100}
+    //superLayer: spineElement.layer
+    }); 
 
 };
 
-var MoreItem = function(spineElementNo,moreItemNo,contentImg,buttonImg) {
-    this.buttonLayer = new Layer({x:0, y:0, width:1027, height:600, image:buttonImg});
-    this.buttonLayer.spineElementNo = spineElementNo;
-    this.buttonLayer.moreItemNo = moreItemNo;
-    this.contentImg = contentImg;
-    //this.contentLayer = new Layer({x:0, y:0, width:1027, height:600, image:contentImg})
+SpineElement.prototype.addMoreItem = function(contentImg,buttonImg) {
+    console.log("adding more item");
 
-    this.buttonLayer.on(Events.TouchEnd, function(event, layer) {
+    var moreBox = new MoreBox(contentImg);
+    this.moreBoxes.push(moreBox);
+    this.moreBoxesPager.addPage(moreBox.layer,"right");
+
+    var moreItemNo = this.moreItems.length;
+    var moreButton = new MoreButton(this.spineElementNo, moreBox, buttonImg);
+    this.moreButtons.push(moreButton);
+    this.drawer.addPage(moreButton.layer,"right");
+};
+
+SpineElement.prototype.populateMoreSections = function() {
+    console.log("populating more sections");
+    var self = this;
+    this.moreItems.forEach(function(moreItem,index,array){
+        // create a box
+        console.log("creating box "+index);
+        var moreBox = new MoreBox(moreItem.contentImg);
+        self.moreBoxes.push(moreBox);
+        self.moreBoxesPager.addPage(moreBox.layer,"right");
+    });
+};
+
+SpineElement.prototype.launchMoreBox = function(destPage) {
+    console.log("launching more at index ");
+    this.moreBoxesPager.snapToPage(destPage.layer,false);
+    this.moreBoxesPager.index = 1000;
+    this.moreBoxesPager.visible = true;
+};
+
+
+var MoreButton = function(spineElementNo,destBox,buttonImg) {
+    this.layer = new Layer({x:0, y:0, width:1027, height:600, image:buttonImg});
+    this.layer.spineElementNo = spineElementNo;
+    this.layer.destBox = destBox;
+    //this.contentImg = contentImg;
+
+    this.layer.on(Events.TouchEnd, function(event, layer) {
         if (scrolling) return;
         // create popup
         //this.popup = new Popup(contentImg);
         var spineElement = spineElements[layer.spineElementNo];
-        spineElement.moreSection = new MoreSection(spineElement.moreItems,layer.spineElementNo);
+        spineElement.launchMoreBox(layer.destBox);
+        //spineElement.moreSection = new MoreSection(spineElement.moreItems,layer.spineElementNo);
         event.stopPropagation();
     });
 };
@@ -63,7 +129,6 @@ var MoreSection = function(moreItems,startingElementNo) {
     this.moreItems = moreItems;
     this.moreBoxes = new Array();
 
-        console.log(this);
     // create page controller
     this.pager = new Framer.PageComponent({
         width: 1240,
@@ -90,52 +155,21 @@ var MoreSection = function(moreItems,startingElementNo) {
 
 };
 
-SpineElement.prototype.addMoreItem = function(spineElementNo,contentImg,buttonImg) {
-    var moreItemNo = this.moreItems.length;
-    var moreItem = new MoreItem(spineElementNo, moreItemNo, contentImg,buttonImg);
-    //var morebutton = new Layer({x:0, y:0, width:1027, height:600, image:imgSrc})
-    this.moreItems.push(moreItem);
-};
-
 var spineElements = new Array();
+spineElements.push( new SpineElement(0,"images/01.jpg") ); 
+spineElements.push( new SpineElement(1,"images/02.jpg") ); 
+spineElements.push( new SpineElement(2,"images/03.jpg") ); 
 
-spineElements.push( new SpineElement("images/01.jpg") ); 
-spineElements.push( new SpineElement("images/02.jpg") ); 
-spineElements.push( new SpineElement("images/03.jpg") ); 
+spineElements[0].addMoreItem("images/1.1.jpg","images/01_strip_1.jpg");
+spineElements[0].addMoreItem("images/1.1.jpg", "images/01_strip_2.jpg");
+spineElements[1].addMoreItem("images/02.1.jpg", "images/02_strip_1.jpg");
+spineElements[1].addMoreItem("images/POP_2.1.jpg", "images/02_strip_2.jpg");
+spineElements[1].addMoreItem("images/POP_2.2.jpg", "images/02_strip_3.jpg");
 
-spineElements[0].addMoreItem(0, "images/1.1.jpg","images/01_strip_1.jpg");
-spineElements[0].addMoreItem(0, "images/1.1.jpg", "images/01_strip_2.jpg");
-spineElements[1].addMoreItem(1, "images/02.1.jpg", "images/02_strip_1.jpg");
-spineElements[1].addMoreItem(1, "images/POP_2.1.jpg", "images/02_strip_2.jpg");
-spineElements[1].addMoreItem(1, "images/POP_2.2.jpg", "images/02_strip_3.jpg");
-/*
-//atoms
-atom_1 = new Layer({x:0, y:0, width:1440, height:2392, image:"images/01.jpg"})
-atom_2 = new Layer({x:0, y:0, width:1440, height:2392, image:"images/02.jpg"})
-atom_3 = new Layer({x:0, y:0, width:1440, height:2392, image:"images/03.jpg"})
-//more buttons
-atom_1_strip_1 = new Layer({x:0, y:0, width:1027, height:600, image:"images/01_strip_1.jpg"})
-atom_1_strip_2 = new Layer({x:0, y:0, width:1027, height:600, image:"images/01_strip_2.jpg"})
-atom_2_strip_1 = new Layer({x:0, y:0, width:1027, height:600, image:"images/02_strip_1.jpg"})
-atom_2_strip_2 = new Layer({x:0, y:0, width:1027, height:600, image:"images/02_strip_2.jpg"})
-atom_2_strip_3 = new Layer({x:0, y:0, width:1027, height:600, image:"images/02_strip_3.jpg"})
 
-//sub-atoms
-atom_1_1 = new Layer({x:0, y:0, width:1318, height:4178, image:"images/1.1.jpg"})
-atom_2_1 = new Layer({x:0, y:0, width:1320, height:2120, image:"images/02.1.jpg"})
-
-//popups
-pop_2_1 = new Layer({x:20, y:20, width:1401, height:2569, image:"images/POP_2.1.jpg"})
-pop_2_2 = new Layer({x:20, y:20, width:1401, height:2608, image:"images/POP_2.2.jpg"})
-pop_3_1 = new Layer({x:20, y:20, width:1401, height:2791, image:"images/POP_3.1.jpg"})
-*/
-
-container = new Layer({x:60, y:60, width:1320, height:2244, image:"images/container.jpg"})
-container.visible = false;
-
-var scrolling = false;
 //////////////////////////////////////////////////////////////////
-// make main pager
+var scrolling = false;
+
 var mainPager = new Framer.PageComponent({
     width: 1440,
     height: 2392,//1720,//2392,
@@ -148,105 +182,11 @@ var mainPager = new Framer.PageComponent({
 spineElements.forEach(function(spineElement,index,array){
     mainPager.addPage(spineElement.layer,"right");
 
-    spineElement.drawer = new Framer.PageComponent({
-        width: 1440,
-        height: 600,
-        scrollVertical: false,
-        scrollHorizontal: true,
-        y: 1720,
-        propagateEvents: false,
-        directionLock: true,
-        backgroundColor: "transparent",
-        directionLockThreshold: {x:10,y:10},
-        superLayer: spineElement.layer
-    }); 
-    spineElement.drawer.on(Events.DirectionLockDidStart, function(event, layer) {  scrolling = true; });
-    spineElement.drawer.on(Events.ScrollEnd, function(event, layer) {  scrolling = false; });
-
 
     //populate drawers
-    spineElement.moreItems.forEach(function(moreItem,index2,array2){
-        spineElement.drawer.addPage(moreItem.buttonLayer,"right");
-    });
+    //spineElement.moreItems.forEach(function(moreItem,index2,array2){
+    //    spineElement.drawer.addPage(moreItem.buttonLayer,"right");
+    //});
 
+    //spineElement.populateMoreSections();
 });
-
-/*
-//////////////////////////////////////////////////////////////////
-// clicking on a 'more' section
-atom_1_strip_1.on(Events.TouchEnd, function(event, layer) {
-if (scrolling) return;
-console.log("click on 1.1");
-container.visible = true;
-container.index=1000;
-event.stopPropagation();
-atom_1_1.superLayer=scroller.content;
-
-});
-
-atom_2_strip_1.on(Events.TouchEnd, function(event, layer) {
-if (scrolling) return;
-container.visible = true;
-container.index=1000;
-event.stopPropagation();
-atom_2_1.superLayer=scroller.content;
-});
-
-//popups
-atom_2_strip_3.on(Events.TouchEnd, function(event, layer) {
-if (scrolling) return;
-pop_2_1.visible = true;
-pop_2_1.index = 1000;
-event.stopPropagation();
-});
-pop_2_1.on(Events.TouchEnd, function(event, layer) {
-pop_2_1.visible = false;
-pop_2_1.index = 1000;
-event.stopPropagation();
-});
-
-atom_2_strip_2.on(Events.TouchEnd, function(event, layer) {
-if (scrolling) return;
-pop_2_2.visible = true;
-pop_2_2.index = 1000;
-event.stopPropagation();
-});
-pop_2_2.on(Events.TouchEnd, function(event, layer) {
-pop_2_2.visible = false;
-pop_2_2.index = 1000;
-event.stopPropagation();
-});
-
-atom_3_hotspot = new Layer({x:740, y:1600, width:600, height:150, backgroundColor: "transparent", superLayer: atom_3});
-atom_3_hotspot.on(Events.Click, function(event, layer) {
-pop_3_1.visible = true;
-pop_3_1.index = 1000;
-event.stopPropagation();
-});
-pop_3_1.on(Events.Click, function(event, layer) {
-pop_3_1.visible = false;
-pop_3_1.index = 1000;
-event.stopPropagation();
-});
-
-
-//////////////////////////////////////////////////////////////////
-// set up scrollers
-var scroller = new Framer.ScrollComponent({
-width: 1320,
-height: 1900,
-scrollVertical: true,
-scrollHorizontal: false,
-y: 100,
-superLayer: container
-});
-
-close_button = new Layer({x:0, y:2040, width:1320, height:200, backgroundColor: "transparent", superLayer: container});
-close_button.on(Events.TouchEnd, function(event, layer) {
-    container.visible = false;
-    event.stopPropagation();
-
-});
-
-*/
-
