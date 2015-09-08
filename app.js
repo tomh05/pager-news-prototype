@@ -2,15 +2,21 @@ var SpineElement = function(spineElementNo,foregroundImgSrc,backroundImgSrc) {
     //this.name = name;
     this.foregroundLayer = new Layer({
         x:0, y:0,
-    width:1135, height:342,
-    image:foregroundImgSrc
+    width:1440, height:2304,
+        backgroundColor: "transparent"
+    });
+    this.foregroundContent = new Layer({
+        x:145, y:1120,
+    width:1300, height:700,
+    image:foregroundImgSrc,
+        superLayer: this.foregroundLayer
     });
     this.backgroundLayer = new Layer({
         x:0, y:0,
         width:1440, height:2304,
         image:backroundImgSrc
     });
-    this.backgroundLayer.visible = false;
+    this.backgroundLayer.opacity = 0;
 
     this.moreItems = new Array();
     this.popups = new Array();
@@ -50,6 +56,7 @@ var SpineElement = function(spineElementNo,foregroundImgSrc,backroundImgSrc) {
         contentInset: {top:100,right:100,bottom:100,left:100}
     //superLayer: spineElement.layer
     }); 
+    this.moreBoxesPager.visible = false;
 
 };
 
@@ -192,10 +199,8 @@ spineElements[1].addMoreItem("images/02.1.jpg", "images/02_strip_1.jpg");
 spineElements[1].addMoreItem("images/POP_2.1.jpg", "images/02_strip_2.jpg");
 spineElements[1].addMoreItem("images/POP_2.2.jpg", "images/02_strip_3.jpg");
 
-
 //////////////////////////////////////////////////////////////////
 var scrolling = false;
-
 
 var screen = new Layer({
     x:0, y:0,
@@ -210,7 +215,7 @@ var mainPager = new Framer.PageComponent({
     scrollVertical: false,
     scrollHorizontal: true,
     y: 0,
-    superLayer: screen
+    superLayer: screen,
 });
 
 pageIndicators = new Array();
@@ -249,20 +254,34 @@ spineElements.forEach(function(spineElement,index,array){
     pageIndicators.push(pageIndicator);
 });
 
+// setup first page
 pageIndicators[0].states.switch("filled");
+spineElements[0].backgroundLayer.opacity = 1;
 
+mainPager.on("change:x",function(event,layer) {
+    console.log("changed x");
+
+});
 
 mainPager.on("change:currentPage",function(event,layer) {
     console.log("changed");
     var index = mainPager.horizontalPageIndex(mainPager.currentPage);
+    var prevIndex = mainPager.horizontalPageIndex(mainPager.previousPage);
 
     for (var i =0;i<pageIndicators.length;i++) {
-        if (i<=index) {
+        if (i==index) {
             pageIndicators[i].states.switch("filled");
         } else {
-
             pageIndicators[i].states.switch("default");
         }
     }
 
+    spineElements[prevIndex].backgroundLayer.animate({
+        properties: { opacity: 0},
+        time: 0.4
+    });
+    spineElements[index].backgroundLayer.animate({
+        properties: { opacity: 1},
+        time: 0.4
+    });
 });
