@@ -2,7 +2,7 @@ var SpineElement = function(spineElementNo,foregroundImgSrc,backroundImgSrc) {
     //this.name = name;
     this.foregroundLayer = new Layer({
         x:0, y:0,
-    width:1440, height:2304,
+    width:1440, height:1780,
         backgroundColor: "transparent"
     });
     this.foregroundContent = new Layer({
@@ -25,43 +25,68 @@ var SpineElement = function(spineElementNo,foregroundImgSrc,backroundImgSrc) {
     this.moreButtons = new Array();
     this.moreBoxes = new Array();
 
-    // create drawer
-    this.drawer = new Framer.PageComponent({
+    this.drawer = new Layer({
         width: 1440,
-        height: 600,
+        height: 525,
+        x: 0,
+        y: 1781,
+        backgroundColor: "white",
+    });
+    this.drawer.visible = false;
+
+
+    // create drawer
+    this.drawerPager = new Framer.PageComponent({
+        superLayer: this.drawer,
+        x:0,
+        y:6,
+        width: 1440,
+        height: 501,
         scrollVertical: false,
         scrollHorizontal: true,
-        y: 1720,
         propagateEvents: false,
         directionLock: true,
         backgroundColor: "transparent",
-        directionLockThreshold: {x:10,y:10},
-        contentInset: {top:100,right:100,bottom:100,left:100},
-        superLayer: this.layer
+        directionLockThreshold: {x:10,y:10}
     }); 
-    this.drawer.on(Events.DirectionLockDidStart, function(event, layer) {  scrolling = true; });
-    this.drawer.on(Events.ScrollEnd, function(event, layer) {  scrolling = false; });
+    this.drawerPager.on(Events.DirectionLockDidStart, function(event, layer) {  scrolling = true; });
+    this.drawerPager.on(Events.ScrollEnd, function(event, layer) {  scrolling = false; });
 
     // create page controller
     this.moreBoxesPager = new Framer.PageComponent({
-        width: 1240,
-        height: 2000,
+        width: 1440,
+        height: 2126,
         scrollVertical: false,
         scrollHorizontal: true,
-        y: 100,
+        y: 0,
+        originX: 0,
         propagateEvents: false,
         directionLock: true,
         backgroundColor: "transparent",
         directionLockThreshold: {x:10,y:10},
-        contentInset: {top:100,right:100,bottom:100,left:100}
-    //superLayer: spineElement.layer
+        contentInset: {top:157,right:64,bottom:0,left:64}
     }); 
+
     this.moreBoxesPager.visible = false;
+    this.moreBoxesCloseButton = new Layer({
+        x:0,
+        y: 2122,
+        width: 1440,
+        height: 182,
+        image: "images/close_area.png"});
+
+    this.moreBoxesCloseButton.visible = false;
+    this.moreBoxesCloseButton.linkedPager = this.moreBoxesPager;
+    this.moreBoxesCloseButton.on(Events.TouchEnd, function(event, layer) {
+
+        layer.linkedPager.visible = false;
+        layer.visible = false;
+    });
 
 };
 
-SpineElement.prototype.addMoreItem = function(contentImg,buttonImg) {
-    console.log("adding more item");
+SpineElement.prototype.addMoreItem = function(buttonImg,contentImg) {
+    //console.log("adding more item");
 
     var moreBox = new MoreBox(contentImg);
     this.moreBoxes.push(moreBox);
@@ -70,7 +95,7 @@ SpineElement.prototype.addMoreItem = function(contentImg,buttonImg) {
     var moreItemNo = this.moreItems.length;
     var moreButton = new MoreButton(this.spineElementNo, moreBox, buttonImg);
     this.moreButtons.push(moreButton);
-    this.drawer.addPage(moreButton.layer,"right");
+    this.drawerPager.addPage(moreButton.layer,"right");
 };
 
 SpineElement.prototype.populateMoreSections = function() {
@@ -90,17 +115,20 @@ SpineElement.prototype.launchMoreBox = function(destPage) {
     this.moreBoxesPager.snapToPage(destPage.layer,false);
     this.moreBoxesPager.index = 1000;
     this.moreBoxesPager.visible = true;
+
+    this.moreBoxesCloseButton.visible = true;
+    this.moreBoxesCloseButton.index = 2000;
 };
 
 
 var MoreButton = function(spineElementNo,destBox,buttonImg) {
     this.layer = new Layer({x:0, y:0, 
-        width:1200, height:600, 
+        width:915, height:513, 
         backgroundColor: "transparent"
     });
     this.sublayer = new Layer({
-        x:50, y:50, 
-        width:1027, height:600, 
+        x:6, y:6, 
+        width:903, height:501, 
         image:buttonImg,
         superLayer:this.layer
     });
@@ -121,36 +149,48 @@ var MoreButton = function(spineElementNo,destBox,buttonImg) {
 
 var MoreBox = function(imgPath) {
 
-    this.layer = new Layer({x:60, y:60, width:1020, height:2244, image:"images/popup_container.jpg"});
-
+    this.layer = new Layer({
+        x:0, y:0, 
+        width:1280+2*9, height:2040,
+        backgroundColor: "#transparent"
+    });
+    this.subLayer = new Layer({
+        x:9, y:0, 
+        width:1280, height:2040,
+        backgroundColor: "#F6F6F6",
+        superLayer: this.layer
+    });
+    /*
     this.closeButton = new Layer({x:1090, y:20, width:100, height:100, 
         image:"images/icon.png",
         superLayer: this.layer
     });
+    */
 
     // set up scrollers
     this.scroller = new Framer.ScrollComponent({
-        x:10, y:100,
-        width: 1000,
-        height: 1900,
+        x:9, y:115,
+        width: 1263,
+        height: 1925,
         scrollVertical: true,
         scrollHorizontal: false,
         directionLock: true,
-        y: 100,
-        superLayer: this.layer
+        superLayer: this.subLayer
     });
 
     this.contentLayer = new Layer({
         x:0, y:0,
-        width:1320, height:2244,
+        width:1263, height:3800,
         image:imgPath,
         superLayer: this.scroller.content
     });
 
+    /*
     this.closeButton.on(Events.TouchEnd, function(event, layer) {
         layer.superLayer.destroy();
         event.stopPropagation();
     });
+    */
 };
 
 var MoreSection = function(moreItems,startingElementNo) {
@@ -193,11 +233,22 @@ spineElements.push( new SpineElement(5,"images/text_6.png","images/bg_06.jpg") )
 spineElements.push( new SpineElement(6,"images/text_7.png","images/bg_07.jpg") ); 
 spineElements.push( new SpineElement(7,"images/text_8.png","images/bg_08.jpg") ); 
 
-spineElements[0].addMoreItem("images/1.1.jpg","images/01_strip_1.jpg");
-spineElements[0].addMoreItem("images/1.1.jpg", "images/01_strip_2.jpg");
-spineElements[1].addMoreItem("images/02.1.jpg", "images/02_strip_1.jpg");
-spineElements[1].addMoreItem("images/POP_2.1.jpg", "images/02_strip_2.jpg");
-spineElements[1].addMoreItem("images/POP_2.2.jpg", "images/02_strip_3.jpg");
+spineElements[0].addMoreItem("images/drawer/1.1.png",  "images/content/1.1.png");
+spineElements[0].addMoreItem("images/drawer/1.2.png",  "images/content/1.2.png");
+spineElements[1].addMoreItem("images/drawer/2.1.png",  "images/content/2.1.png");
+spineElements[1].addMoreItem("images/drawer/2.2.png",  "images/content/2.2.png");
+spineElements[1].addMoreItem("images/drawer/2.3.png",  "images/content/2.3.png");
+spineElements[1].addMoreItem("images/drawer/2.4_A.png","images/content/2.4.png");
+spineElements[3].addMoreItem("images/drawer/4.1.png",  "images/content/4.1.png");
+spineElements[3].addMoreItem("images/drawer/4.2.png",  "images/content/4.2.png");
+spineElements[3].addMoreItem("images/drawer/4.3.png",  "images/content/4.3.png");
+spineElements[3].addMoreItem("images/drawer/4.4.png",  "images/content/4.4.png");
+spineElements[4].addMoreItem("images/drawer/5.1.png",  "images/content/5.1.png");
+spineElements[4].addMoreItem("images/drawer/5.2.png",  "images/content/5.2.png");
+spineElements[4].addMoreItem("images/drawer/5.3_A.png","images/content/5.3.png");
+spineElements[4].addMoreItem("images/drawer/5.4.png",  "images/content/5.4.png");
+spineElements[5].addMoreItem("images/drawer/6.1.png",  "images/content/6.1.png");
+spineElements[5].addMoreItem("images/drawer/6.2.png",  "images/content/6.2.png");
 
 //////////////////////////////////////////////////////////////////
 var scrolling = false;
@@ -211,7 +262,7 @@ var screen = new Layer({
 
 var mainPager = new Framer.PageComponent({
     width: 1440,
-    height: 2392,
+    height: 1780,
     scrollVertical: false,
     scrollHorizontal: true,
     y: 0,
@@ -254,9 +305,51 @@ spineElements.forEach(function(spineElement,index,array){
     pageIndicators.push(pageIndicator);
 });
 
+var homeButton = new Layer({
+    x:  1300,
+    y: 60,
+    superLayer: screen,
+    image: "images/home.png",
+    width: 59, 
+    height: 50
+})
+
+//timelines
+var timelineLeftLine = new Layer({
+    x:  150,
+    y: 1026,
+    superLayer: screen,
+    //image: "images/progresscircle.png
+    width: 0, 
+    height: 4,
+    backgroundColor: "white"
+})
+var timelineRightLine = new Layer({
+    x:  150,
+    y: 1026,
+    superLayer: screen,
+    //image: "images/progresscircle.png
+    width: 1290, 
+    height: 4,
+    opacity: 0.5,
+    backgroundColor: "white"
+})
+
+var timelineCircle = new Layer({
+    x:  150,
+    y: 1006,
+    superLayer: screen,
+    //image: "images/progresscircle.png
+    width: 40, 
+    height: 40,
+    borderRadius:20,
+    backgroundColor: "white"
+
+})
 // setup first page
 pageIndicators[0].states.switch("filled");
 spineElements[0].backgroundLayer.opacity = 1;
+spineElements[0].drawer.visible = true;
 
 mainPager.on("change:x",function(event,layer) {
     console.log("changed x");
@@ -264,7 +357,6 @@ mainPager.on("change:x",function(event,layer) {
 });
 
 mainPager.on("change:currentPage",function(event,layer) {
-    console.log("changed");
     var index = mainPager.horizontalPageIndex(mainPager.currentPage);
     var prevIndex = mainPager.horizontalPageIndex(mainPager.previousPage);
 
@@ -276,6 +368,7 @@ mainPager.on("change:currentPage",function(event,layer) {
         }
     }
 
+    // animate background
     spineElements[prevIndex].backgroundLayer.animate({
         properties: { opacity: 0},
         time: 0.4
@@ -284,4 +377,50 @@ mainPager.on("change:currentPage",function(event,layer) {
         properties: { opacity: 1},
         time: 0.4
     });
+    //animate drawer
+    
+    spineElements[prevIndex].drawer.visible = false;
+    spineElements[index].drawer.visible = true;
+   /* spineElements[prevIndex].drawer.animate({
+        properties: { opacity: 0},
+        time: 0.4
+    });
+    spineElements[index].drawer.animate({
+        properties: { opacity: 1},
+        time: 0.4
+    });
+    */
+
+
+
+    var timelinePos = 150 + 1100* index/(numPages-1);
+    timelineCircle.animate({
+         properties: { x: timelinePos},
+        time: 0.4
+
+    });
+
+    if (index>0){
+    timelineLeftLine.animate({
+        properties: { x:0, width: timelinePos},
+        time: 0.4
+    });
+    } else {
+    timelineLeftLine.animate({
+        properties: { x: 150, width: 0},
+        time: 0.4
+    });
+    }
+
+    if (index<numPages-1){
+    timelineRightLine.animate({
+        properties: { x: timelinePos, width: screen.width - timelinePos },
+        time: 0.4
+    });
+    } else {
+    timelineRightLine.animate({
+        properties: { x: 1250, width: 0},
+        time: 0.4
+    });
+    }
 });
