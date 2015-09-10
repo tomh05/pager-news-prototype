@@ -742,3 +742,8 @@ mainPager.on("change:currentPage",function(event,layer) {
         });
     }
 });
+
+
+// make app autoprepare
+homeScreen.states.switchInstant("on");
+screen.states.switchInstant("off");
