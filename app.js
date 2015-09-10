@@ -86,7 +86,7 @@ var SpineElement = function(spineElementNo,foregroundImgSrc,backroundImgSrc) {
         backgroundColor: "transparent",
         //directionLockThreshold: {x:20,y:0},
         contentInset: {top:157,right:64,bottom:0,left:64},
-    superLayer: screen
+        superLayer: screen
     }); 
 
     this.moreBoxesPager.states.add({
@@ -111,24 +111,6 @@ var SpineElement = function(spineElementNo,foregroundImgSrc,backroundImgSrc) {
 
         }
     });
-    /*
-       this.moreBoxesPager.on(Events.ScrollEnd,function(event,layer) {
-       console.log("x change");
-       var pages = layer.layer.subLayers; // eww!!
-// make all layers opaque
-
-//var index = mainPager.horizontalPageIndex(layer.currentPage);
-//var prevIndex = mainPager.horizontalPageIndex(layer.previousPage);
-//layer.superLayer.currentPage.states.switch("default");
-//layer.superLayer.previousPage.states.switch("faded");
-for (var i=0;i<pages.length;i++){
-console.log(i + ":" + pages[i].x);
-
-if (pages[i].x < 0 || pages[i].x>1000)
-pages[i].states.switch("faded");
-}
-});
-*/
 
 this.moreBoxesCloseButton = new Layer({
     x:0,
@@ -155,32 +137,21 @@ this.moreBoxesCloseButton.states.add({
 
 };
 
-SpineElement.prototype.addMoreItem = function(contentImg, contentHeight, url, buttonImg,buttonImg2,buttonImg3) {
+//SpineElement.prototype.addMoreItem = function(contentImg, contentHeight, url, buttonImg,buttonImg2,buttonImg3) {
+SpineElement.prototype.addMoreItem = function(params) {
 
-    var moreBox = new MoreBox(contentImg, contentHeight);
+    var moreBox = new MoreBox(params);
     this.moreBoxes.push(moreBox);
     this.moreBoxesPager.addPage(moreBox.layer,"right");
     //this.moreBoxesPager.pages = this.moreBoxes;
 
     var moreItemNo = this.moreItems.length;
-    var moreButton = new MoreButton(this.spineElementNo, moreBox, url, buttonImg,buttonImg2,buttonImg3);
+    //var moreButton = new MoreButton(this.spineElementNo, moreBox, url, buttonImg,buttonImg2,buttonImg3);
+    var moreButton = new MoreButton(this.spineElementNo, moreBox, params);
     this.moreButtons.push(moreButton);
     this.drawerPager.addPage(moreButton.layer,"right");
 };
 
-/*
-SpineElement.prototype.populateMoreSections = function() {
-    console.log("populating more sections");
-    var self = this;
-    this.moreItems.forEach(function(moreItem,index,array){
-        // create a box
-        console.log("creating box "+index);
-        var moreBox = new MoreBox(moreItem.contentImg);
-        self.moreBoxes.push(moreBox);
-        self.moreBoxesPager.addPage(moreBox.layer,"right");
-    });
-};
-*/
 
 SpineElement.prototype.launchMoreBox = function(destPage) {
     this.moreBoxesPager.snapToPage(destPage.layer,false);
@@ -197,7 +168,7 @@ SpineElement.prototype.launchMoreBox = function(destPage) {
 };
 
 
-var MoreButton = function(spineElementNo,destBox,url,buttonImg,buttonImg2,buttonImg3) {
+var MoreButton = function(spineElementNo,destBox,params) {
 
     this.layer = new Layer({x:0, y:0, 
         width:915, height:513, 
@@ -207,19 +178,18 @@ var MoreButton = function(spineElementNo,destBox,url,buttonImg,buttonImg2,button
     this.sublayer = new Layer({
         x:6, y:6, 
         width:903, height:501, 
-        image:buttonImg,
+        image:params.buttonImg,
         superLayer:this.layer
     });
 
-
-    if (typeof buttonImg3 != 'undefined') {
-
+    this.layer.buttonMode = params.type;
+    if (params.type=="discover") {
 
         this.sublayer2 = new Layer({
             name: "sublayer2",
             x:6, y:6, 
             width:903, height:501, 
-            image:buttonImg2,
+            image:params.buttonImg2,
             superLayer:this.layer,
             opacity: 0
         });
@@ -228,7 +198,7 @@ var MoreButton = function(spineElementNo,destBox,url,buttonImg,buttonImg2,button
             name: "sublayer3",
             x:6, y:6, 
             width:903, height:501, 
-            image:buttonImg3,
+            image:params.buttonImg3,
             superLayer:this.layer,
             opacity: 0
         });
@@ -239,12 +209,9 @@ var MoreButton = function(spineElementNo,destBox,url,buttonImg,buttonImg2,button
         //this.layer.buttonImg3 = buttonImg3;
 
         this.layer.clickState = 0;
-     } else if (url != "") {
-        this.layer.buttonMode = "external_link";
-            console.log("external used");
-        this.layer.url = url;
-   } else {
-        this.layer.buttonMode = "normal";
+    } else if (params.type=="external_link") {
+        this.layer.url = params.url;
+    } else {
     }
 
     this.layer.spineElementNo = spineElementNo;
@@ -256,13 +223,9 @@ var MoreButton = function(spineElementNo,destBox,url,buttonImg,buttonImg2,button
         // create popup
         //this.popup = new Popup(contentImg);
         //
-        console.log("touched");
-        console.log(layer);
         // actions for buttons that can be added to timeline
         if (layer.buttonMode == "discover") {
             if (layer.clickState == 0) {
-                //console.log(layer.buttonImg2);
-                //    layer.subLayers[0].image = layer.buttonImg2;
                 layer.subLayersByName("sublayer2")[0].states.switch("on");
                 layer.clickState = 1;
             } else if (layer.clickState==1) {
@@ -270,20 +233,20 @@ var MoreButton = function(spineElementNo,destBox,url,buttonImg,buttonImg2,button
                 layer.subLayersByName("sublayer2")[0].states.switch("default");
                 layer.subLayersByName("sublayer3")[0].states.switch("on");
                 layer.clickState = 2;
-             } else if (layer.clickState==2) {
+            } else if (layer.clickState==2) {
                 layer.subLayersByName("sublayer3")[0].states.switch("default");
                 layer.clickState = 0;
-                               
+
                 //layer.subLayersByName("sublayer3")[0].states.switch("default",{delay:1});
                 /*
-                 Utils.delay(1.0,function(layer) {
-                    console.log(layer);
-                
-                layer.subLayersByName("sublayer3")[0].states.switch("default");
-                layer.clickState = 0;
-                
-                });
-                */
+                   Utils.delay(1.0,function(layer) {
+                   console.log(layer);
+
+                   layer.subLayersByName("sublayer3")[0].states.switch("default");
+                   layer.clickState = 0;
+
+                   });
+                   */
             }
 
         } else if (layer.buttonMode == "external_link") {
@@ -298,7 +261,7 @@ var MoreButton = function(spineElementNo,destBox,url,buttonImg,buttonImg2,button
     });
 };
 
-var MoreBox = function(imgPath,contentHeight) {
+var MoreBox = function(params) {
 
     this.layer = new Layer({
         x:0, y:0, 
@@ -307,12 +270,15 @@ var MoreBox = function(imgPath,contentHeight) {
     });
     this.layer.states.add({
         faded: {opacity:0.5}});
+    this.layer.buttonMode = params.type;
+
     this.subLayer = new Layer({
         x:9, y:0, 
         width:1280, height:2040,
         backgroundColor: "#F6F6F6",
         superLayer: this.layer
     });
+
     /*
        this.closeButton = new Layer({x:1090, y:20, width:100, height:100, 
        image:"images/icon.png",
@@ -321,29 +287,138 @@ var MoreBox = function(imgPath,contentHeight) {
        */
     this.contentLayer = new Layer({
         x:0, y:0,
-        width:1263, height:contentHeight,
-        image:imgPath
+        width:1263, height:params.contentHeight,
+        image:params.contentImg
     });
 
-    if (contentHeight > 1925) {
-    this.scroller = new Framer.ScrollComponent({
-        x:9, y:115,
-        width: 1263,
-        height: 1925,
-        scrollVertical: true,
-        scrollHorizontal: false,
-        //directionLock: true,
-        superLayer: this.subLayer
-    });
+    if (params.type=="discover") {
+        this.hotspot1 = new Layer({
+            x:120, y:440,
+            width:400, height:150,
+            backgroundColor: "transparent",
+            superLayer: this.contentLayer
+        });
 
-    
-    this.contentLayer.x = 0;
-    this.contentLayer.y = 0;
-    this.contentLayer.superLayer = this.scroller.content;
+        this.contentLayer2 = new Layer({
+            x:0, y:0,
+            width:1263, height:params.contentHeight,
+            //opacity: 0,
+            superLayer: this.contentLayer,
+            visible: false,
+            image:params.contentImg2
+        });
+        this.hotspot2 = new Layer({
+            x:600, y:300,
+            width:540, height:450,
+            backgroundColor: "transparent",
+            superLayer: this.contentLayer2
+        });
+
+        this.contentLayer2.states.add({ on: {opacity:1}});
+
+        this.contentLayer3 = new Layer({
+            x:0, y:0,
+            width:1263, height:params.contentHeight,
+            //opacity: 0,
+            superLayer: this.contentLayer,
+            visible: false,
+            image:params.contentImg3
+        });
+        this.contentLayer3.states.add({ on: {opacity:1}});
+
+        this.hotspot3 = new Layer({
+            x:100, y:300,
+            width:1040, height:450,
+            backgroundColor: "transparent",
+            superLayer: this.contentLayer3
+        });
+
+        this.layer.clickState = 0;
+        // actions
+        this.hotspot1.targetLayer = this.contentLayer2;
+        this.hotspot2.targetLayer = this.contentLayer3;
+
+        this.hotspot1.on(Events.TouchEnd, function(event, layer) {
+            console.log("1");
+            //layer.targetLayer.states.switch("on");
+            layer.targetLayer.visible = true;
+        });
+        this.hotspot2.on(Events.TouchEnd, function(event, layer) {
+            //layer.superLayer.states.switch("default");
+            layer.superLayer.visible = false;
+            layer.targetLayer.visible = true;
+            //layer.targetLayer.states.switch("on");
+        });
+        this.hotspot3.on(Events.TouchEnd, function(event, layer) {
+             layer.superLayer.visible = false;
+            //layer.targetLayer.visible = true;
+            //layer.superLayer.states.switch("default");
+        });
+
+    } else if (params.type=="external_link") {
+        this.layer.url = params.url;
+        this.hotspot = new Layer({
+            x:100, y:1000,
+            width:760, height:180,
+            backgroundColor: "transparent",
+            superLayer: this.contentLayer
+        });
+        this.hotspot.url = params.url;
+        this.hotspot.on(Events.TouchEnd, function(event, layer) {
+            window.open(layer.url);
+        });
+    }
+
+    /*
+
+    this.layer.on(Events.TouchEnd, function(event, layer) {
+        console.log("clicked");
+        console.log(layer);
+        console.log(layer.buttonMode);
+        if (layer.buttonMode == "discover") {
+            if (layer.clickState == 0) {
+                layer.subLayersByName("contentLayer2")[0].states.switch("on");
+                layer.clickState = 1;
+            } else if (layer.clickState==1) {
+
+                layer.subLayersByName("contentLayer2")[0].states.switch("default");
+                layer.subLayersByName("contentLayer3")[0].states.switch("on");
+                layer.clickState = 2;
+            } else if (layer.clickState==2) {
+                layer.subLayersByName("contentLayer3")[0].states.switch("default");
+                layer.clickState = 0;
+            }
+
+        } else if (layer.buttonMode == "external_link") {
+            console.log("external clicked");
+            window.open(layer.url);
+        } else {
+            // do nothing
+        }
+        //event.stopPropagation();
+    });
+    */
+
+
+    if (params.contentHeight > 1925) {
+        this.scroller = new Framer.ScrollComponent({
+            x:9, y:115,
+            width: 1263,
+            height: 1925,
+            scrollVertical: true,
+            scrollHorizontal: false,
+            //directionLock: true,
+            superLayer: this.subLayer
+        });
+
+
+        this.contentLayer.x = 0;
+        this.contentLayer.y = 0;
+        this.contentLayer.superLayer = this.scroller.content;
     } else {
-    this.contentLayer.x = 9;
-    this.contentLayer.y = 115;
-    this.contentLayer.superLayer = this.subLayer;
+        this.contentLayer.x = 9;
+        this.contentLayer.y = 115;
+        this.contentLayer.superLayer = this.subLayer;
     }
 
 
@@ -378,7 +453,6 @@ var MoreSection = function(moreItems,startingElementNo) {
     var self = this;
     this.moreItems.forEach(function(moreItem,index,array){
         // create a box
-        console.log("creating box "+index);
         var moreBox = new MoreBox(moreItem.contentImg);
         self.moreBoxes.push(moreBox);
         self.pager.addPage(moreBox.layer,"right");
@@ -397,34 +471,51 @@ spineElements.push( new SpineElement(5,"images/text_6.png","images/bg_06.jpg") )
 spineElements.push( new SpineElement(7,"images/text_8.png","images/bg_08.jpg") ); 
 
 spineElements[6].hotspot = new Layer({
-        x:120, y:1200,
-        width:800, height:200,
-        backgroundColor: "transparent",
+    x:120, y:1200,
+    width:800, height:200,
+    backgroundColor: "transparent",
     superLayer: spineElements[6].foregroundLayer,
     index:500
-    });
+});
 
 spineElements[6].hotspot.on(Events.TouchEnd, function(event, layer) {
-            window.open("http://www.bbc.co.uk/news/world-europe-32988841");
+    window.open("http://www.bbc.co.uk/news/world-europe-32988841");
 
 });
 
-spineElements[0].addMoreItem({contentImg: "images/content/1.1.png", contentHeight: 2112,type:"default" buttonImg:"images/drawer/1.1.png"} );
-spineElements[0].addMoreItem("images/content/1.2.png",   1711, "", "images/drawer/1.2.png" );
-spineElements[1].addMoreItem("images/content/2.1.png",   2168, "", "images/drawer/2.1.png" );
-spineElements[1].addMoreItem("images/content/2.2.png",   2099, "", "images/drawer/2.2.png" );
-spineElements[1].addMoreItem("images/content/2.3.png",   1791, "", "images/drawer/2.3.png" );
-spineElements[1].addMoreItem("images/content/2.4_A.png", 1791, "", "images/drawer/2.4_A.png", "images/drawer/2.4_B.png", "images/drawer/2.4_C.png");
-spineElements[3].addMoreItem("images/content/4.1.png",   1705, "", "images/drawer/4.1.png" );
-spineElements[3].addMoreItem("images/content/4.2.png",   1331, "", "images/drawer/4.2.png" );
-spineElements[3].addMoreItem("images/content/4.3.png",   3311, "", "images/drawer/4.3.png" );
-spineElements[3].addMoreItem("images/content/4.4.png",   1954, "", "images/drawer/4.4.png" );
-spineElements[4].addMoreItem("images/content/5.1.png",   2862, "", "images/drawer/5.1.png" );
-spineElements[4].addMoreItem("images/content/5.2.png",   2311, "", "images/drawer/5.2.png" );
-spineElements[4].addMoreItem("images/content/5.3_A.png", 1807, "", "images/drawer/5.3_A.png", "images/drawer/5.3_B.png", "images/drawer/5.3_C.png");
-spineElements[4].addMoreItem("images/content/5.4.png",   1229, "http://www.bbc.co.uk/news/business-33474605", "images/drawer/5.4.png" );
-spineElements[5].addMoreItem("images/content/6.1.png",   1873, "", "images/drawer/6.1.png" );
-spineElements[5].addMoreItem("images/content/6.2.png",   2478, "", "images/drawer/6.2.png" );
+spineElements[0].addMoreItem({type:"default", contentImg: "images/content/1.1.png", contentHeight: 2112,  buttonImg:"images/drawer/1.1.png"} );
+spineElements[0].addMoreItem({type:"default", contentImg: "images/content/1.2.png", contentHeight: 1711,  buttonImg:"images/drawer/1.2.png"} );
+spineElements[1].addMoreItem({type:"default", contentImg: "images/content/2.1.png", contentHeight: 2168,  buttonImg:"images/drawer/2.1.png"} );
+spineElements[1].addMoreItem({type:"default", contentImg: "images/content/2.2.png", contentHeight: 2099,  buttonImg:"images/drawer/2.2.png"} );
+spineElements[1].addMoreItem({type:"default", contentImg: "images/content/2.3.png", contentHeight: 1791,  buttonImg:"images/drawer/2.3.png"} );
+spineElements[1].addMoreItem({type:"discover", contentImg: "images/content/2.4_A.png",contentImg2: "images/content/2.4_B.png",contentImg3: "images/content/2.4_C.png", contentHeight: 1791,  buttonImg: "images/drawer/2.4_A.png", buttonImg2:"images/drawer/2.4_B.png", buttonImg3:"images/drawer/2.4_C.png"} );
+spineElements[3].addMoreItem({type:"default", contentImg: "images/content/4.1.png", contentHeight: 1705,  buttonImg:"images/drawer/4.1.png"} );
+spineElements[3].addMoreItem({type:"default", contentImg: "images/content/4.2.png", contentHeight: 1331,  buttonImg:"images/drawer/4.2.png"} );
+spineElements[3].addMoreItem({type:"default", contentImg: "images/content/4.3.png", contentHeight: 3311,  buttonImg:"images/drawer/4.3.png"} );
+spineElements[3].addMoreItem({type:"default", contentImg: "images/content/4.4.png", contentHeight: 1954,  buttonImg:"images/drawer/4.4.png"} );
+spineElements[4].addMoreItem({type:"default", contentImg: "images/content/5.1.png", contentHeight: 2862,  buttonImg:"images/drawer/5.1.png"} );
+spineElements[4].addMoreItem({type:"default", contentImg: "images/content/5.2.png", contentHeight: 2311,  buttonImg:"images/drawer/5.2.png"} );
+spineElements[4].addMoreItem({type:"discover", contentImg: "images/content/5.3_A.png",contentImg2: "images/content/5.3_B.png",contentImg3: "images/content/5.3_C.png", contentHeight: 1791,  buttonImg: "images/drawer/5.3_A.png", buttonImg2:"images/drawer/5.3_B.png", buttonImg3:"images/drawer/5.3_C.png"} );
+spineElements[4].addMoreItem({type:"external_link", contentImg: "images/content/5.4.png", contentHeight: 1229,  buttonImg:"images/drawer/5.4.png", url:"http://www.bbc.co.uk/news/business-33474605" } );
+spineElements[5].addMoreItem({type:"default", contentImg: "images/content/6.1.png", contentHeight: 1873,  buttonImg:"images/drawer/6.1.png"} );
+spineElements[5].addMoreItem({type:"default", contentImg: "images/content/6.2.png", contentHeight: 2478,  buttonImg:"images/drawer/6.2.png"} );
+
+/*
+   spineElements[1].addMoreItem("images/content/2.1.png",   2168, "", "images/drawer/2.1.png" );
+   spineElements[1].addMoreItem("images/content/2.2.png",   2099, "", "images/drawer/2.2.png" );
+   spineElements[1].addMoreItem("images/content/2.3.png",   1791, "", "images/drawer/2.3.png" );
+   spineElements[1].addMoreItem("images/content/2.4_A.png", 1791, "", "images/drawer/2.4_A.png", "images/drawer/2.4_B.png", "images/drawer/2.4_C.png");
+   spineElements[3].addMoreItem("images/content/4.1.png",   1705, "", "images/drawer/4.1.png" );
+   spineElements[3].addMoreItem("images/content/4.2.png",   1331, "", "images/drawer/4.2.png" );
+   spineElements[3].addMoreItem("images/content/4.3.png",   3311, "", "images/drawer/4.3.png" );
+   spineElements[3].addMoreItem("images/content/4.4.png",   1954, "", "images/drawer/4.4.png" );
+   spineElements[4].addMoreItem("images/content/5.1.png",   2862, "", "images/drawer/5.1.png" );
+   spineElements[4].addMoreItem("images/content/5.2.png",   2311, "", "images/drawer/5.2.png" );
+   spineElements[4].addMoreItem("images/content/5.3_A.png", 1807, "", "images/drawer/5.3_A.png", "images/drawer/5.3_B.png", "images/drawer/5.3_C.png");
+   spineElements[4].addMoreItem("images/content/5.4.png",   1229, "http://www.bbc.co.uk/news/business-33474605", "images/drawer/5.4.png" );
+   spineElements[5].addMoreItem("images/content/6.1.png",   1873, "", "images/drawer/6.1.png" );
+   spineElements[5].addMoreItem("images/content/6.2.png",   2478, "", "images/drawer/6.2.png" );
+   */
 
 //////////////////////////////////////////////////////////////////
 var scrolling = false;
@@ -455,11 +546,7 @@ pageIndicatorHolder.states.add({
 
 spineElements.forEach(function(spineElement,index,array){
     mainPager.addPage(spineElement.foregroundLayer,"right");
-    //populate drawers
-    //spineElement.moreItems.forEach(function(moreItem,index2,array2){
-    //    spineElement.drawer.addPage(moreItem.buttonLayer,"right");
-    //});
-    //spineElement.populateMoreSections();
+
     pageIndicator = new Layer({
         width: 34,
                   height: 34,
@@ -584,11 +671,6 @@ spineElements[0].backgroundLayer.opacity = 1;
 if (spineElements[0].moreButtons.length>0) {
     spineElements[0].drawer.visible = true;
 }
-
-mainPager.on("change:x",function(event,layer) {
-    console.log("changed x");
-
-});
 
 mainPager.on("change:currentPage",function(event,layer) {
     var index = mainPager.horizontalPageIndex(mainPager.currentPage);
