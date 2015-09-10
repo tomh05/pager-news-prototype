@@ -1,8 +1,19 @@
-var screen = new Layer({
+
+var superScreen = new Layer({
     x:0, y:0,
     width: 1440,
     height: 2392,
     backgroundColor: "transparent"
+});
+//superScreen.center();
+
+
+var screen = new Layer({
+    x:0, y:0,
+    width: 1440,
+    height: 2392,
+    backgroundColor: "transparent",
+    superLayer:superScreen
 });
 
 
@@ -74,7 +85,8 @@ var SpineElement = function(spineElementNo,foregroundImgSrc,backroundImgSrc) {
         directionLock: true,
         backgroundColor: "transparent",
         //directionLockThreshold: {x:20,y:0},
-        contentInset: {top:157,right:64,bottom:0,left:64}
+        contentInset: {top:157,right:64,bottom:0,left:64},
+    superLayer: screen
     }); 
 
     this.moreBoxesPager.states.add({
@@ -123,7 +135,8 @@ this.moreBoxesCloseButton = new Layer({
     y: 2392,
     width: 1440,
     height: 182,
-    image: "images/close_area.png"});
+    image: "images/close_area.png",
+    superLayer: screen});
 
 //this.moreBoxesCloseButton.visible = false;
 this.moreBoxesCloseButton.linkedPager = this.moreBoxesPager;
@@ -135,6 +148,7 @@ this.moreBoxesCloseButton.on(Events.TouchEnd, function(event, layer) {
     //show timeline again
     timeline.states.switch("default");
     pageIndicatorHolder.states.switch("default");
+    homeButton.states.switch("default");
 });
 this.moreBoxesCloseButton.states.add({
     on: {y:2122}});
@@ -175,6 +189,7 @@ SpineElement.prototype.launchMoreBox = function(destPage) {
     this.moreBoxesPager.states.switch("on");
     timeline.states.switch("transparent");
     pageIndicatorHolder.states.switch("dim");
+    homeButton.states.switch("dim");
 
     //this.moreBoxesCloseButton.visible = true;
     this.moreBoxesCloseButton.states.switch("on");
@@ -256,7 +271,7 @@ var MoreButton = function(spineElementNo,destBox,url,buttonImg,buttonImg2,button
                 layer.subLayersByName("sublayer3")[0].states.switch("on");
                 layer.clickState = 2;
              } else if (layer.clickState==2) {
-                layer.subLayersByName("sublayer3")[0].states.switch("off");
+                layer.subLayersByName("sublayer3")[0].states.switch("default");
                 layer.clickState = 0;
                                
                 //layer.subLayersByName("sublayer3")[0].states.switch("default",{delay:1});
@@ -390,10 +405,11 @@ spineElements[6].hotspot = new Layer({
     });
 
 spineElements[6].hotspot.on(Events.TouchEnd, function(event, layer) {
-            window.open("http://www.bbc.co.uk/news/business-33474605");
+            window.open("http://www.bbc.co.uk/news/world-europe-32988841");
+
 });
 
-spineElements[0].addMoreItem("images/content/1.1.png",   2112, "", "images/drawer/1.1.png" );
+spineElements[0].addMoreItem({contentImg: "images/content/1.1.png", contentHeight: 2112,type:"default" buttonImg:"images/drawer/1.1.png"} );
 spineElements[0].addMoreItem("images/content/1.2.png",   1711, "", "images/drawer/1.2.png" );
 spineElements[1].addMoreItem("images/content/2.1.png",   2168, "", "images/drawer/2.1.png" );
 spineElements[1].addMoreItem("images/content/2.2.png",   2099, "", "images/drawer/2.2.png" );
@@ -471,6 +487,9 @@ var homeButton = new Layer({
     width: 260, 
     height: 180
 });
+homeButton.states.add({
+    dim: {opacity:0.2}});
+
 var homeIcon = new Layer({
     superLayer: homeButton,
     x:  100,
@@ -484,7 +503,8 @@ var homeScreen = new Layer({
     y: 0,
     image: "images/home.jpg",
     width: 1440, 
-    height: 2304
+    height: 2304,
+    superLayer:superScreen
 });
 homeScreen.states.add({
     on: {x:-0}
